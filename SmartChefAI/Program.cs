@@ -1,7 +1,17 @@
+using Microsoft.EntityFrameworkCore;
+using SmartChefAI.Data;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+builder.Services.AddDbContext<SmartChefContext>(options =>
+{
+    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+        ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+
+    options.UseSqlServer(connectionString);
+});
 
 var app = builder.Build();
 
