@@ -1,0 +1,137 @@
+@model MealGenerationRequestViewModel
+
+@{
+    ViewData["Title"] = "Generate Meal";
+}
+
+<div class="hero-panel">
+    <h1 class="mb-3">Generate a Smart Meal</h1>
+    <p class="text-muted-soft mb-0">
+        Tell the assistant what you have on hand and your calorie goal. We will mock an intelligent recipe,
+        complete with macros, ingredients, and step-by-step guidance. Add as many ingredients as you like—feel free to
+        remove or adjust them before generating the meal. Tip: include quantities to get more precise nutrition estimates.
+    </p>
+</div>
+
+@if (TempData["Error"] is string errorMessage)
+{
+    <div class="alert alert-danger">@errorMessage</div>
+}
+
+<form asp-action="Generate" method="post" class="needs-validation" novalidate>
+    @Html.AntiForgeryToken()
+    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+    <fieldset class="border rounded-3 p-3 p-md-4 mb-4 bg-light">
+        <legend class="float-none w-auto px-2 fw-semibold">Ingredients</legend>
+        <div class="row g-3">
+            @for (var i = 0; i < Model.Ingredients.Count; i++)
+            {
+                <div class="col-12">
+                    <div class="card ingredient-card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h6 class="mb-0">Ingredient @(i + 1)</h6>
+                                @if (Model.Ingredients.Count > 1)
+                                {
+                                    <button class="btn btn-sm btn-outline-danger" type="submit" name="submitAction" value="removeIngredient"
+                                            formaction="@Url.Action("Generate", "Meals")" formmethod="post"
+                                            onclick="document.getElementById('remove-index').value='@i'">
+                                        Remove
+                                    </button>
+                                }
+                            </div>
+                            <div class="row g-2">
+                                <div class="col-12 col-lg-6">
+                                    <label asp-for="Ingredients[i].Name" class="form-label">Ingredient name</label>
+                                    <input asp-for="Ingredients[i].Name" class="form-control" placeholder="e.g. Chicken breast, Spinach" />
+                                    <span asp-validation-for="Ingredients[i].Name" class="text-danger small"></span>
+                                </div>
+                                <div class="col-6 col-lg-3">
+                                    <label asp-for="Ingredients[i].Quantity" class="form-label">Quantity</label>
+                                    <input asp-for="Ingredients[i].Quantity" class="form-control" placeholder="e.g. 150" />
+                                    <span asp-validation-for="Ingredients[i].Quantity" class="text-danger small"></span>
+                                </div>
+                                <div class="col-6 col-lg-3">
+                                    <label asp-for="Ingredients[i].Unit" class="form-label">Unit</label>
+                                    <input asp-for="Ingredients[i].Unit" class="form-control" placeholder="g, cup, tbsp" />
+                                    <span asp-validation-for="Ingredients[i].Unit" class="text-danger small"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+        <div class="mt-3">
+            <button class="btn btn-outline-primary" type="submit" name="submitAction" value="addIngredient">
+                <span class="me-1">+</span>Add another ingredient
+            </button>
+        </div>
+    </fieldset>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-6 col-lg-4">
+            <label asp-for="CalorieTarget" class="form-label">Calorie target for this meal</label>
+            <div class="input-group">
+                <input asp-for="CalorieTarget" class="form-control" placeholder="e.g. 600" />
+                <span class="input-group-text">kcal</span>
+            </div>
+            <span asp-validation-for="CalorieTarget" class="text-danger small"></span>
+        </div>
+        <div class="col-md-6 col-lg-4 d-flex align-items-center">
+            <div class="form-check mt-4">
+                <input asp-for="UseUserCalorieTarget" class="form-check-input" />
+                <label asp-for="UseUserCalorieTarget" class="form-check-label">
+                    Use my saved daily calorie goal
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <input type="hidden" id="remove-index" name="removeIndex" value="-1" />
+
+    <div class="d-flex gap-2">
+        <button class="btn btn-primary" type="submit" name="submitAction" value="generate">
+            Generate Meal
+        </button>
+        <a class="btn btn-outline-secondary" asp-controller="Meals" asp-action="Saved">View saved meals</a>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function () {
+            const checkbox = document.getElementById("@Html.IdFor(m => m.UseUserCalorieTarget)");
+            const calorieInput = document.getElementById("@Html.IdFor(m => m.CalorieTarget)");
+
+            function toggleCalorieInput() {
+                if (!checkbox || !calorieInput) return;
+                const readOnly = checkbox.checked;
+                calorieInput.readOnly = readOnly;
+                calorieInput.classList.toggle("bg-light", readOnly);
+                if (readOnly) {
+                    calorieInput.setAttribute("title", "Using your saved daily target");
+                } else {
+                    calorieInput.removeAttribute("title");
+                }
+            }
+
+            if (checkbox) {
+                checkbox.addEventListener("change", toggleCalorieInput);
+                toggleCalorieInput();
+            }
+
+            // Reset hidden remove index after each submission to avoid accidental removals.
+            document.querySelectorAll("form button[type='submit']").forEach(btn => {
+                btn.addEventListener("click", function () {
+                    const hidden = document.getElementById("remove-index");
+                    if (hidden && this.value !== "removeIngredient") {
+                        hidden.value = "-1";
+                    }
+                });
+            });
+        })();
+    </script>
+}

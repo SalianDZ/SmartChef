@@ -13,11 +13,13 @@ public class AccountController : Controller
 {
     private readonly IUserService _userService;
     private readonly ILogger<AccountController> _logger;
+    private readonly IAppLogService _appLogService;
 
-    public AccountController(IUserService userService, ILogger<AccountController> logger)
+    public AccountController(IUserService userService, ILogger<AccountController> logger, IAppLogService appLogService)
     {
         _userService = userService;
         _logger = logger;
+        _appLogService = appLogService;
     }
 
     [HttpGet]
@@ -62,6 +64,7 @@ public class AccountController : Controller
 
         await SignInAsync(user, false);
         _logger.LogInformation("User {Email} registered and signed in.", user.Email);
+        await _appLogService.LogAsync("Information", $"User registered: {user.Email}", cancellationToken);
 
         return RedirectToAction("Index", "Home");
     }
@@ -103,6 +106,7 @@ public class AccountController : Controller
 
         await SignInAsync(user, viewModel.RememberMe);
         _logger.LogInformation("User {Email} logged in.", user.Email);
+        await _appLogService.LogAsync("Information", $"User logged in: {user.Email}", cancellationToken);
 
         if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
         {
@@ -119,6 +123,7 @@ public class AccountController : Controller
     {
         await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
         _logger.LogInformation("User logged out.");
+        await _appLogService.LogAsync("Information", "User logged out.", CancellationToken.None);
         return RedirectToAction("Index", "Home");
     }
 

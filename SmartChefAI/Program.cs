@@ -26,6 +26,13 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
 builder.Services.AddAuthorization();
 builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddHttpClient<INutritionService, NutritionService>(client =>
+{
+    client.BaseAddress = new Uri("https://dummyjson.com/");
+    client.Timeout = TimeSpan.FromSeconds(10);
+});
+builder.Services.AddScoped<IMealGenerationService, MockMealGenerationService>();
+builder.Services.AddScoped<IAppLogService, AppLogService>();
 
 var app = builder.Build();
 

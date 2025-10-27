@@ -1,0 +1,81 @@
+@model IEnumerable<SmartChefAI.Models.Meal>
+
+@{
+    ViewData["Title"] = "Saved Meals";
+}
+
+<div class="hero-panel">
+    <h1 class="mb-2">Saved Meals</h1>
+    <p class="text-muted-soft mb-0">Revisit your AI-crafted dishes, review macro summaries, and reuse ingredient inspiration any time.</p>
+</div>
+
+@if (TempData["Success"] is string successMessage)
+{
+    <div class="alert alert-success">@successMessage</div>
+}
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">
+        You haven't saved any meals yet.
+        <a asp-action="Generate">Generate one now</a>.
+    </div>
+}
+else
+{
+    <div class="row row-cols-1 row-cols-md-2 g-4">
+        @foreach (var meal in Model)
+        {
+            <div class="col">
+                <div class="saved-card h-100 p-4">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h5 class="card-title mb-1">@meal.Title</h5>
+                            <p class="text-muted-soft mb-0">@meal.Description</p>
+                        </div>
+                        <span class="badge-nutrition">Created @meal.CreatedAtUtc.ToLocalTime().ToString("g")</span>
+                    </div>
+                    <div class="mb-3">
+                        <span class="badge-nutrition">Calories: @meal.TotalCalories</span>
+                        <span class="badge-nutrition">Protein: @meal.ProteinGrams g</span>
+                        <span class="badge-nutrition">Carbs: @meal.CarbohydrateGrams g</span>
+                        <span class="badge-nutrition">Fat: @meal.FatGrams g</span>
+                    </div>
+                    <details>
+                        <summary>Ingredients</summary>
+                        <ul class="mt-2">
+                            @foreach (var ingredient in meal.Ingredients)
+                            {
+                                <li class="mb-1">
+                                    <strong>@ingredient.Name</strong>
+                                    @if (ingredient.Amount.HasValue)
+                                    {
+                                        <span>- @ingredient.Amount</span>
+                                    }
+                                    @if (!string.IsNullOrWhiteSpace(ingredient.Unit))
+                                    {
+                                        <span>@ingredient.Unit</span>
+                                    }
+                                    <span class="text-muted">(@(ingredient.Calories ?? 0m) kcal)</span>
+                                </li>
+                            }
+                        </ul>
+                    </details>
+                    <details class="mt-3">
+                        <summary>Instructions</summary>
+                        <ol class="mt-2">
+                            @foreach (var instruction in meal.Instructions.OrderBy(i => i.StepNumber))
+                            {
+                                <li class="mb-1">@instruction.Text</li>
+                            }
+                        </ol>
+                    </details>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+<div class="mt-4">
+    <a class="btn btn-primary" asp-action="Generate">Generate Another Meal</a>
+</div>

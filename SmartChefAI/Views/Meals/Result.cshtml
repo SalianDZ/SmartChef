@@ -1,0 +1,93 @@
+@model MealGenerationResultViewModel
+
+@{
+    ViewData["Title"] = "Generated Meal";
+}
+
+<div class="hero-panel">
+    <h1 class="mb-2">@Model.Meal.Title</h1>
+    <p class="lead mb-0">@Model.Meal.Description</p>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100 nutrition-card">
+            <div class="card-body">
+                <h5 class="card-title text-white">Nutrition Summary</h5>
+                <ul class="list-unstyled mb-0">
+                    <li><strong>Calories:</strong> @Model.Meal.Nutrition.TotalCalories</li>
+                    <li><strong>Protein:</strong> @Model.Meal.Nutrition.TotalProteinGrams g</li>
+                    <li><strong>Carbs:</strong> @Model.Meal.Nutrition.TotalCarbohydrateGrams g</li>
+                    <li><strong>Fat:</strong> @Model.Meal.Nutrition.TotalFatGrams g</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-8">
+        <div class="card h-100 glass-card">
+            <div class="card-body">
+                <h5 class="card-title">Your Inputs</h5>
+                <p class="card-text">@Model.Meal.InputSummary</p>
+                <div class="mt-3">
+                    <span class="badge-nutrition">Protein: @Model.Meal.Nutrition.TotalProteinGrams g</span>
+                    <span class="badge-nutrition">Carbs: @Model.Meal.Nutrition.TotalCarbohydrateGrams g</span>
+                    <span class="badge-nutrition">Fat: @Model.Meal.Nutrition.TotalFatGrams g</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-6">
+        <div class="card h-100 glass-card">
+            <div class="card-body">
+                <h5 class="card-title">Ingredients</h5>
+                <ul class="list-unstyled">
+                    @foreach (var ingredient in Model.Meal.Ingredients)
+                    {
+                        <li class="mb-2">
+                            <strong>@ingredient.Name</strong>
+                            @if (ingredient.Amount.HasValue)
+                            {
+                                <span>- @ingredient.Amount</span>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(ingredient.Unit))
+                            {
+                                <span>@ingredient.Unit</span>
+                            }
+                            <span class="text-muted">(@ingredient.Calories kcal)</span>
+                        </li>
+                    }
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card h-100 glass-card">
+            <div class="card-body">
+                <h5 class="card-title">Instructions</h5>
+                <ol class="list-group list-group-numbered">
+                    @foreach (var step in Model.Meal.Instructions.OrderBy(i => i.StepNumber))
+                    {
+                        <li class="list-group-item">@step.Text</li>
+                    }
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <div class="mt-4 d-flex flex-wrap gap-2">
+        <form asp-action="Save" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="mealJson" value='@Model.MealJson' />
+            <button class="btn btn-primary" type="submit">Save Meal</button>
+        </form>
+        <a class="btn btn-outline-secondary" asp-action="Generate">Generate Another</a>
+        <a class="btn btn-link" asp-action="Saved">View Saved Meals</a>
+    </div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
