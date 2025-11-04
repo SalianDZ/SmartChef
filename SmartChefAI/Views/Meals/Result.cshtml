@@ -1,6 +1,8 @@
 @model MealGenerationResultViewModel
 
 @{
+    var mode = (string?)(ViewData["Mode"] ?? "dummy");
+    var actionName = mode == "chef" ? "ChefAi" : "DummyAi";
     ViewData["Title"] = "Generated Meal";
 }
 
@@ -8,6 +10,14 @@
     <h1 class="mb-2">@Model.Meal.Title</h1>
     <p class="lead mb-0">@Model.Meal.Description</p>
 </div>
+
+@if (ViewData["ModeWarnings"] is IEnumerable<string> warnings && warnings.Any())
+{
+    foreach (var warning in warnings)
+    {
+        <div class="alert alert-warning">@warning</div>
+    }
+}
 
 <div class="row g-4 mb-4">
     <div class="col-md-6 col-lg-4">
@@ -78,15 +88,16 @@
     </div>
 </div>
 
-    <div class="mt-4 d-flex flex-wrap gap-2">
-        <form asp-action="Save" method="post">
-            @Html.AntiForgeryToken()
-            <input type="hidden" name="mealJson" value='@Model.MealJson' />
-            <button class="btn btn-primary" type="submit">Save Meal</button>
-        </form>
-        <a class="btn btn-outline-secondary" asp-action="Generate">Generate Another</a>
-        <a class="btn btn-link" asp-action="Saved">View Saved Meals</a>
-    </div>
+<div class="mt-4 d-flex flex-wrap gap-2">
+    <form asp-action="Save" method="post">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="mealJson" value='@Model.MealJson' />
+        <input type="hidden" name="mode" value="@mode" />
+        <button class="btn btn-primary" type="submit">Save Meal</button>
+    </form>
+    <a class="btn btn-outline-secondary" asp-action="@actionName">Generate Another</a>
+    <a class="btn btn-link" asp-action="Saved">View Saved Meals</a>
+</div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />

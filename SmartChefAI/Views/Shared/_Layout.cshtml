@@ -28,7 +28,10 @@
                         @if (User?.Identity is { IsAuthenticated: true })
                         {
                             <li class="nav-item">
-                                <a class="nav-link" asp-area="" asp-controller="Meals" asp-action="Generate">Generate Meal</a>
+                                <a class="nav-link" asp-area="" asp-controller="Meals" asp-action="DummyAi">Dummy AI</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-area="" asp-controller="Meals" asp-action="ChefAi">ChefAI</a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link" asp-area="" asp-controller="Meals" asp-action="Saved">Saved Meals</a>

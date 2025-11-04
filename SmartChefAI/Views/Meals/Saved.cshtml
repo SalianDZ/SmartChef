@@ -18,7 +18,7 @@
 {
     <div class="alert alert-info">
         You haven't saved any meals yet.
-        <a asp-action="Generate">Generate one now</a>.
+        <a asp-action="DummyAi">Generate one now</a>.
     </div>
 }
 else
@@ -77,5 +77,6 @@ else
 }
 
 <div class="mt-4">
-    <a class="btn btn-primary" asp-action="Generate">Generate Another Meal</a>
+    <a class="btn btn-primary me-2" asp-action="DummyAi">Dummy AI Meal</a>
+    <a class="btn btn-outline-primary" asp-action="ChefAi">ChefAI Meal</a>
 </div>

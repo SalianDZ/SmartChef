@@ -1,24 +1,34 @@
 @model MealGenerationRequestViewModel
 
 @{
-    ViewData["Title"] = "Generate Meal";
+    var mode = (string?)(ViewData["Mode"] ?? "dummy");
+    var heroTitle = (string?)(ViewData["ModeTitle"] ?? "Generate a Smart Meal");
+    var heroSubtitle = (string?)(ViewData["ModeSubtitle"] ?? "Tell the assistant what you have on hand and your calorie goal.");
+    var actionName = (string?)(ViewData["ModePrimaryAction"] ?? "DummyAi");
+    ViewData["Title"] = heroTitle;
 }
 
 <div class="hero-panel">
-    <h1 class="mb-3">Generate a Smart Meal</h1>
+    <h1 class="mb-3">@heroTitle</h1>
     <p class="text-muted-soft mb-0">
-        Tell the assistant what you have on hand and your calorie goal. We will mock an intelligent recipe,
-        complete with macros, ingredients, and step-by-step guidance. Add as many ingredients as you like—feel free to
-        remove or adjust them before generating the meal. Tip: include quantities to get more precise nutrition estimates.
+        @heroSubtitle
     </p>
 </div>
+
+@if (ViewData["ModeWarnings"] is IEnumerable<string> warnings && warnings.Any())
+{
+    foreach (var warning in warnings)
+    {
+        <div class="alert alert-warning">@warning</div>
+    }
+}
 
 @if (TempData["Error"] is string errorMessage)
 {
     <div class="alert alert-danger">@errorMessage</div>
 }
 
-<form asp-action="Generate" method="post" class="needs-validation" novalidate>
+<form asp-action="@actionName" method="post" class="needs-validation" novalidate>
     @Html.AntiForgeryToken()
     <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
@@ -35,7 +45,7 @@
                                 @if (Model.Ingredients.Count > 1)
                                 {
                                     <button class="btn btn-sm btn-outline-danger" type="submit" name="submitAction" value="removeIngredient"
-                                            formaction="@Url.Action("Generate", "Meals")" formmethod="post"
+                                            formaction="@Url.Action(actionName, "Meals")" formmethod="post"
                                             onclick="document.getElementById('remove-index').value='@i'">
                                         Remove
                                     </button>
