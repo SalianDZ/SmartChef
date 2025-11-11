@@ -23,6 +23,9 @@
                             <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
                         </li>
                         <li class="nav-item">
+                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="About">About</a>
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
                         </li>
                         @if (User?.Identity is { IsAuthenticated: true })
@@ -76,7 +79,9 @@
 
     <footer class="footer-smart mt-auto">
         <div class="container text-center">
-            &copy; 2025 - SmartChefAI &middot; <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+            &copy; 2025 - SmartChefAI &middot;
+            <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a> &middot;
+            <a asp-area="" asp-controller="Home" asp-action="About">About</a>
         </div>
     </footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
