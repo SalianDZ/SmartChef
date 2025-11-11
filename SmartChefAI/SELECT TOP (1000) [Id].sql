@@ -1,0 +1,5 @@
+SELECT TOP (1000) [Id]
+      ,[CreatedAtUtc]
+      ,[Level]
+      ,[Message]
+  FROM [SmartChefDb].[dbo].[AppLogs]

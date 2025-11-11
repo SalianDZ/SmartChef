@@ -3,13 +3,30 @@
 @{
     var mode = (string?)(ViewData["Mode"] ?? "dummy");
     var actionName = mode == "chef" ? "ChefAi" : "DummyAi";
+    var modeLabel = mode == "chef" ? "ChefAI Gourmet" : "Dummy AI Kitchen";
     ViewData["Title"] = "Generated Meal";
 }
 
-<div class="hero-panel">
-    <h1 class="mb-2">@Model.Meal.Title</h1>
-    <p class="lead mb-0">@Model.Meal.Description</p>
-</div>
+<section class="result-hero animate-panel @(mode == "chef" ? "chef" : "dummy")">
+    <div class="animate-fade">
+        <div class="mode-chip">
+            <span class="dot"></span>
+            @modeLabel
+        </div>
+        <h1>@Model.Meal.Title</h1>
+        <p class="lead mb-3">@Model.Meal.Description</p>
+        <div class="macro-chip-group">
+            <span class="macro-chip">Calories @Model.Meal.Nutrition.TotalCalories.ToString("0")</span>
+            <span class="macro-chip">Protein @Model.Meal.Nutrition.TotalProteinGrams.ToString("0.#") g</span>
+            <span class="macro-chip">Carbs @Model.Meal.Nutrition.TotalCarbohydrateGrams.ToString("0.#") g</span>
+            <span class="macro-chip">Fat @Model.Meal.Nutrition.TotalFatGrams.ToString("0.#") g</span>
+        </div>
+    </div>
+    <div class="hero-card animate-fade delay-1">
+        <p class="text-muted mb-1">Based on your inputs</p>
+        <p class="mb-0">@Model.Meal.InputSummary</p>
+    </div>
+</section>
 
 @if (ViewData["ModeWarnings"] is IEnumerable<string> warnings && warnings.Any())
 {
@@ -20,83 +37,102 @@
 }
 
 <div class="row g-4 mb-4">
-    <div class="col-md-6 col-lg-4">
-        <div class="card h-100 nutrition-card">
-            <div class="card-body">
-                <h5 class="card-title text-white">Nutrition Summary</h5>
-                <ul class="list-unstyled mb-0">
-                    <li><strong>Calories:</strong> @Model.Meal.Nutrition.TotalCalories</li>
-                    <li><strong>Protein:</strong> @Model.Meal.Nutrition.TotalProteinGrams g</li>
-                    <li><strong>Carbs:</strong> @Model.Meal.Nutrition.TotalCarbohydrateGrams g</li>
-                    <li><strong>Fat:</strong> @Model.Meal.Nutrition.TotalFatGrams g</li>
-                </ul>
+    <div class="col-lg-4">
+        <div class="result-card accent animate-slide-up">
+            <div class="result-card-header">
+                <h5>Nutrition snapshot</h5>
+                <span class="status-pill @(mode == "chef" ? "status-pill-success" : "status-pill-warning")">
+                    @(mode == "chef" ? "Live data" : "Simulated")
+                </span>
             </div>
+            <ul class="stat-list mb-0">
+                <li>
+                    <span>Calories</span>
+                    <strong>@Model.Meal.Nutrition.TotalCalories.ToString("0") kcal</strong>
+                </li>
+                <li>
+                    <span>Protein</span>
+                    <strong>@Model.Meal.Nutrition.TotalProteinGrams.ToString("0.##") g</strong>
+                </li>
+                <li>
+                    <span>Carbs</span>
+                    <strong>@Model.Meal.Nutrition.TotalCarbohydrateGrams.ToString("0.##") g</strong>
+                </li>
+                <li>
+                    <span>Fats</span>
+                    <strong>@Model.Meal.Nutrition.TotalFatGrams.ToString("0.##") g</strong>
+                </li>
+            </ul>
         </div>
     </div>
-    <div class="col-md-6 col-lg-8">
-        <div class="card h-100 glass-card">
-            <div class="card-body">
-                <h5 class="card-title">Your Inputs</h5>
-                <p class="card-text">@Model.Meal.InputSummary</p>
-                <div class="mt-3">
-                    <span class="badge-nutrition">Protein: @Model.Meal.Nutrition.TotalProteinGrams g</span>
-                    <span class="badge-nutrition">Carbs: @Model.Meal.Nutrition.TotalCarbohydrateGrams g</span>
-                    <span class="badge-nutrition">Fat: @Model.Meal.Nutrition.TotalFatGrams g</span>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="row g-4">
-    <div class="col-md-6">
-        <div class="card h-100 glass-card">
-            <div class="card-body">
-                <h5 class="card-title">Ingredients</h5>
-                <ul class="list-unstyled">
-                    @foreach (var ingredient in Model.Meal.Ingredients)
-                    {
-                        <li class="mb-2">
+    <div class="col-lg-8">
+        <div class="result-card animate-slide-up delay-1">
+            <h5 class="mb-3">Ingredient lineup</h5>
+            <ul class="ingredient-list">
+                @foreach (var ingredient in Model.Meal.Ingredients)
+                {
+                    <li>
+                        <div>
                             <strong>@ingredient.Name</strong>
-                            @if (ingredient.Amount.HasValue)
-                            {
-                                <span>- @ingredient.Amount</span>
-                            }
-                            @if (!string.IsNullOrWhiteSpace(ingredient.Unit))
-                            {
-                                <span>@ingredient.Unit</span>
-                            }
-                            <span class="text-muted">(@ingredient.Calories kcal)</span>
-                        </li>
-                    }
-                </ul>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-6">
-        <div class="card h-100 glass-card">
-            <div class="card-body">
-                <h5 class="card-title">Instructions</h5>
-                <ol class="list-group list-group-numbered">
-                    @foreach (var step in Model.Meal.Instructions.OrderBy(i => i.StepNumber))
-                    {
-                        <li class="list-group-item">@step.Text</li>
-                    }
-                </ol>
-            </div>
+                            <small>
+                                @if (ingredient.Amount.HasValue)
+                                {
+                                    <span>@ingredient.Amount?.ToString("0.##")</span>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(ingredient.Unit))
+                                {
+                                    <span>@ingredient.Unit</span>
+                                }
+                            </small>
+                        </div>
+                        @if (ingredient.Calories.HasValue && ingredient.Calories.Value > 0)
+                        {
+                            <span class="text-muted">@ingredient.Calories.Value.ToString("0.##") kcal</span>
+                        }
+                    </li>
+                }
+            </ul>
         </div>
     </div>
 </div>
 
-<div class="mt-4 d-flex flex-wrap gap-2">
-    <form asp-action="Save" method="post">
-        @Html.AntiForgeryToken()
-        <input type="hidden" name="mealJson" value='@Model.MealJson' />
-        <input type="hidden" name="mode" value="@mode" />
-        <button class="btn btn-primary" type="submit">Save Meal</button>
-    </form>
-    <a class="btn btn-outline-secondary" asp-action="@actionName">Generate Another</a>
-    <a class="btn btn-link" asp-action="Saved">View Saved Meals</a>
+<div class="result-card animate-slide-up">
+    <div class="row g-4">
+        <div class="col-md-7">
+            <h5 class="mb-3">Instruction timeline</h5>
+            <ol class="instruction-timeline">
+                @foreach (var step in Model.Meal.Instructions.OrderBy(i => i.StepNumber))
+                {
+                    <li>
+                        <div class="step-number">@step.StepNumber</div>
+                        <div class="step-body">@step.Text</div>
+                    </li>
+                }
+            </ol>
+        </div>
+        <div class="col-md-5">
+            <h5 class="mb-3">Next steps</h5>
+            <p>
+                Happy with this plate? Save it to your library or apply it to today’s intake to update
+                the calorie tracker instantly. You can always tweak ingredients back on the generator page.
+            </p>
+            <form asp-action="Save" method="post" class="mb-3">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="mealJson" value='@Model.MealJson' />
+                <input type="hidden" name="mode" value="@mode" />
+                <div class="d-flex flex-wrap gap-2">
+                    <button class="btn btn-primary" type="submit">Save Meal</button>
+                    <button class="btn btn-success" type="submit" name="applyToDaily" value="true">
+                        Save &amp; Apply Today
+                    </button>
+                </div>
+            </form>
+            <div class="d-flex flex-wrap gap-2">
+                <a class="btn btn-outline-secondary" asp-action="@actionName">Generate Another</a>
+                <a class="btn btn-link" asp-action="Saved">View Saved Meals</a>
+            </div>
+        </div>
+    </div>
 </div>
 
 @section Scripts {

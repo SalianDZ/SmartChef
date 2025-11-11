@@ -18,4 +18,6 @@ public class User
     public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
 
     public ICollection<Meal> Meals { get; set; } = new List<Meal>();
+
+    public ICollection<DailyNutritionLog> DailyNutritionLogs { get; set; } = new List<DailyNutritionLog>();
 }

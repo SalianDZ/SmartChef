@@ -9,12 +9,12 @@ namespace SmartChefAI.Services;
 
 public class ChefMealGenerationService : IMealGenerationService
 {
-    private readonly RealNutritionService _nutritionService;
+    private readonly INutritionService _nutritionService;
     private readonly IAiTextService _aiTextService;
     private readonly ILogger<ChefMealGenerationService> _logger;
 
     public ChefMealGenerationService(
-        RealNutritionService nutritionService,
+        INutritionService nutritionService,
         IAiTextService aiTextService,
         ILogger<ChefMealGenerationService> logger)
     {
@@ -63,6 +63,20 @@ public class ChefMealGenerationService : IMealGenerationService
                     {
                         StepNumber = index + 1,
                         Text = text.Trim()
+                    })
+                    .ToList();
+            }
+
+            if (aiIdea.Ingredients?.Any() == true)
+            {
+                meal.Ingredients = aiIdea.Ingredients
+                    .Where(ingredient => !string.IsNullOrWhiteSpace(ingredient.Name))
+                    .Select(aiIngredient => new MealIngredient
+                    {
+                        Name = aiIngredient.Name,
+                        Amount = aiIngredient.Amount,
+                        Unit = aiIngredient.Unit,
+                        Calories = null
                     })
                     .ToList();
             }

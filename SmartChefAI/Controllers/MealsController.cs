@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Security.Claims;
 using System.Text.Json;
@@ -24,7 +25,6 @@ public class MealsController : Controller
     private readonly SmartChefContext _dbContext;
     private readonly ILogger<MealsController> _logger;
     private readonly IAppLogService _appLogService;
-    private readonly NutritionApiOptions _nutritionOptions;
     private readonly GeminiApiOptions _aiOptions;
 
     public MealsController(
@@ -34,7 +34,6 @@ public class MealsController : Controller
         SmartChefContext dbContext,
         ILogger<MealsController> logger,
         IAppLogService appLogService,
-        IOptions<NutritionApiOptions> nutritionOptions,
         IOptions<GeminiApiOptions> aiOptions)
     {
         _dummyMealGenerationService = dummyMealGenerationService;
@@ -43,7 +42,6 @@ public class MealsController : Controller
         _dbContext = dbContext;
         _logger = logger;
         _appLogService = appLogService;
-        _nutritionOptions = nutritionOptions.Value;
         _aiOptions = aiOptions.Value;
     }
 
@@ -77,7 +75,7 @@ public class MealsController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Save(string mealJson, string mode = "dummy", CancellationToken cancellationToken = default)
+    public async Task<IActionResult> Save(string mealJson, string mode = "dummy", bool applyToDaily = false, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(mealJson))
         {
@@ -142,8 +140,17 @@ public class MealsController : Controller
         _dbContext.Meals.Add(meal);
         await _dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
-        await _appLogService.LogAsync("Information", $"Meal saved: {meal.Title} for user {user.Email}", cancellationToken);
-        TempData["Success"] = "Meal saved successfully.";
+        if (applyToDaily)
+        {
+            await ApplyMealToDailyLogAsync(user, meal, cancellationToken).ConfigureAwait(false);
+            TempData["Success"] = "Meal saved and applied to today's intake.";
+        }
+        else
+        {
+            TempData["Success"] = "Meal saved successfully.";
+        }
+
+        await _appLogService.LogAsync("Information", $"Meal saved: {meal.Title} for user {user.Email}", cancellationToken).ConfigureAwait(false);
         return RedirectToAction(nameof(Saved));
     }
 
@@ -292,40 +299,61 @@ public class MealsController : Controller
 
         var warnings = new List<string>();
 
-        if (!_nutritionOptions.UseRealApi)
-        {
-            warnings.Add("Real nutrition API is not configured. ChefAI will fall back to simulated macros until credentials are provided.");
-        }
-
         if (!_aiOptions.Enabled)
         {
             warnings.Add("Gemini AI integration is disabled. ChefAI will use template-based descriptions.");
         }
-        else if (!IsAiKeyAvailable())
+        else if (!HasVertexProjectConfigured())
         {
-            var envName = string.IsNullOrWhiteSpace(_aiOptions.ApiKeyEnvironmentVariable)
-                ? "GeminiApi.ApiKey"
-                : _aiOptions.ApiKeyEnvironmentVariable!;
-            warnings.Add($"Gemini API key is missing. Provide a key via configuration or environment variable '{envName}'.");
+            warnings.Add("Gemini ProjectId is missing. Set GeminiApi:ProjectId or GOOGLE_CLOUD_PROJECT for Vertex AI.");
         }
 
         ViewData["ModeWarnings"] = warnings.Any() ? warnings : null;
     }
 
-    private bool IsAiKeyAvailable()
+    private async Task ApplyMealToDailyLogAsync(User user, Meal meal, CancellationToken cancellationToken)
     {
-        if (!string.IsNullOrWhiteSpace(_aiOptions.ApiKey))
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+
+        var log = await _dbContext.DailyNutritionLogs
+            .FirstOrDefaultAsync(l => l.UserId == user.Id && l.Date == today, cancellationToken)
+            .ConfigureAwait(false);
+
+        if (log == null)
+        {
+            log = new DailyNutritionLog
+            {
+                UserId = user.Id,
+                Date = today,
+                Calories = 0,
+                ProteinGrams = 0,
+                CarbohydrateGrams = 0,
+                FatGrams = 0
+            };
+
+            _dbContext.DailyNutritionLogs.Add(log);
+        }
+
+        log.Calories += meal.TotalCalories;
+        log.ProteinGrams += meal.ProteinGrams;
+        log.CarbohydrateGrams += meal.CarbohydrateGrams;
+        log.FatGrams += meal.FatGrams;
+
+        await _dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+        await _appLogService.LogAsync("Information", $"Daily log updated for {user.Email} with meal {meal.Title}.", cancellationToken)
+            .ConfigureAwait(false);
+    }
+
+    private bool HasVertexProjectConfigured()
+    {
+        if (!string.IsNullOrWhiteSpace(_aiOptions.ProjectId))
         {
             return true;
         }
 
-        if (!string.IsNullOrWhiteSpace(_aiOptions.ApiKeyEnvironmentVariable))
-        {
-            var fromEnv = Environment.GetEnvironmentVariable(_aiOptions.ApiKeyEnvironmentVariable);
-            return !string.IsNullOrWhiteSpace(fromEnv);
-        }
-
-        return false;
+        var envProject = Environment.GetEnvironmentVariable("GOOGLE_CLOUD_PROJECT");
+        return !string.IsNullOrWhiteSpace(envProject);
     }
 
     private async Task PopulateCalorieTargetIfRequestedAsync(MealGenerationRequestViewModel request, CancellationToken cancellationToken)

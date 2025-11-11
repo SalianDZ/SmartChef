@@ -4,13 +4,11 @@ public class GeminiApiOptions
 {
     public bool Enabled { get; set; }
 
-    public string? ApiKey { get; set; }
+    public string Model { get; set; } = "gemini-2.5-pro";
 
-    public string? ApiKeyEnvironmentVariable { get; set; } = "GEMINI_API_KEY";
+    public string ProjectId { get; set; } = string.Empty;
 
-    public string Model { get; set; } = "gemini-1.5-flash";
-
-    public string BaseUrl { get; set; } = "https://generativelanguage.googleapis.com/";
+    public string Location { get; set; } = "us-central1";
 
     public string DefaultSystemPrompt { get; set; } =
         "You are ChefAI, an assistant that crafts healthy, flavorful meals. Respond with concise JSON.";

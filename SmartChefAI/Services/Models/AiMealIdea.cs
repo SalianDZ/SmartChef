@@ -9,4 +9,6 @@ public class AiMealIdea
     public string Description { get; set; } = string.Empty;
 
     public List<string> Instructions { get; set; } = new();
+
+    public List<AiMealIngredient> Ingredients { get; set; } = new();
 }

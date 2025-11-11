@@ -3,39 +3,96 @@
 @{
     ViewData["Title"] = "Login";
     var returnUrl = ViewData["ReturnUrl"] as string;
+    var highlights = new[]
+    {
+        "Instant access to saved meals and daily logs",
+        "Seamless switch between Dummy AI and ChefAI",
+        "See your calorie tracker as soon as you log in"
+    };
 }
 
-<div class="hero-panel">
-    <h1 class="mb-2">Sign in</h1>
-    <p class="text-muted-soft mb-0">Pick up where you left off—access saved meals, calorie targets, and the assistant in seconds.</p>
-</div>
+<section class="auth-hero animate-panel">
+    <div class="animate-fade hero-copy">
+        <div class="mode-chip">
+            <span class="dot"></span>
+            Welcome back
+        </div>
+        <h1 class="mb-3">Sign in to keep the kitchen running.</h1>
+        <p class="lead mb-4">
+            Your personal SmartChef space includes tailored calorie targets, saved meals, and activity history—
+            all synced across devices.
+        </p>
+        <ul class="feature-list stacked">
+            @foreach (var highlight in highlights)
+            {
+                <li>@highlight</li>
+            }
+        </ul>
+        <div class="auth-benefits">
+            <div>
+                <h6>Meal history</h6>
+                <p class="mb-0 small text-white-75">Revisit every ChefAI plate you’ve saved.</p>
+            </div>
+            <div>
+                <h6>Nutrition tracker</h6>
+                <p class="mb-0 small text-white-75">See calories, macros, and streaks instantly.</p>
+            </div>
+            <div>
+                <h6>AI prompts</h6>
+                <p class="mb-0 small text-white-75">Reuse your favorite ingredient combos.</p>
+            </div>
+        </div>
+    </div>
+    <div class="auth-hint-card animate-fade delay-1">
+        <p class="text-muted mb-1">Need an account?</p>
+        <p class="mb-3">Create one in seconds and start building your SmartChef pantry.</p>
+        <a asp-action="Register" class="btn btn-outline-light w-100 mb-2">Create free account</a>
+        <small class="d-block text-white-50">Your data stays private and encrypted.</small>
+    </div>
+</section>
 
 <div class="row justify-content-center">
     <div class="col-lg-5">
-        <div class="card form-card p-4">
+        <div class="auth-card animate-slide-up">
+            <div class="auth-card-header">
+                <h4>Enter your details</h4>
+                <p class="mb-0 text-muted">We’ll keep you signed in if you’d like.</p>
+            </div>
             <form asp-action="Login" method="post" class="row g-3">
                 @Html.AntiForgeryToken()
                 <input type="hidden" name="returnUrl" value="@returnUrl" />
-                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-2"></div>
                 <div class="col-12">
                     <label asp-for="Email" class="form-label"></label>
-                    <input asp-for="Email" class="form-control" />
-                    <span asp-validation-for="Email" class="text-danger"></span>
+                    <div class="input-icon">
+                        <span class="icon material-icon">mail</span>
+                        <input asp-for="Email" class="form-control" autocomplete="email" />
+                    </div>
+                    <span asp-validation-for="Email" class="text-danger small"></span>
                 </div>
                 <div class="col-12">
                     <label asp-for="Password" class="form-label"></label>
-                    <input asp-for="Password" class="form-control" />
-                    <span asp-validation-for="Password" class="text-danger"></span>
+                    <div class="input-icon">
+                        <span class="icon material-icon">lock</span>
+                        <input asp-for="Password" class="form-control" autocomplete="current-password" />
+                        <button type="button" class="toggle-visibility" data-target="@Html.IdFor(m => m.Password)">
+                            <span class="material-icon">visibility</span>
+                        </button>
+                    </div>
+                    <span asp-validation-for="Password" class="text-danger small"></span>
                 </div>
-                <div class="col-12 form-check">
-                    <input asp-for="RememberMe" class="form-check-input" />
-                    <label asp-for="RememberMe" class="form-check-label"></label>
+                <div class="col-12 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <div class="form-check">
+                        <input asp-for="RememberMe" class="form-check-input" />
+                        <label asp-for="RememberMe" class="form-check-label"></label>
+                    </div>
+                    <small class="text-muted">Securely encrypted via ASP.NET Identity</small>
                 </div>
                 <div class="col-12">
                     <button type="submit" class="btn btn-primary w-100">Sign in</button>
                 </div>
                 <div class="col-12 text-center">
-                    <p class="mb-0">Need an account? <a asp-action="Register">Register here</a>.</p>
+                    <p class="mb-0">Need a hand? <a asp-action="Register">Register here</a>.</p>
                 </div>
             </form>
         </div>
@@ -44,4 +101,19 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        document.querySelectorAll('.toggle-visibility').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const targetId = btn.getAttribute('data-target');
+                if (!targetId) return;
+                const input = document.getElementById(targetId);
+                if (!input) return;
+                input.type = input.type === 'password' ? 'text' : 'password';
+                const icon = btn.querySelector('.material-icon');
+                if (icon) {
+                    icon.textContent = input.type === 'password' ? 'visibility' : 'visibility_off';
+                }
+            });
+        });
+    </script>
 }

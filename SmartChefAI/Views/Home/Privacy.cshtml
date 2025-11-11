@@ -1,6 +1,56 @@
 ﻿@{
-    ViewData["Title"] = "Privacy Policy";
+    ViewData["Title"] = "Privacy & Data Practices";
 }
-<h1>@ViewData["Title"]</h1>
 
-<p>Use this page to detail your site's privacy policy.</p>
+<section class="dashboard-hero slim animate-panel">
+    <div class="animate-fade">
+        <p class="eyebrow-text">Transparency first</p>
+        <h1>We respect the ingredients you trust us with.</h1>
+        <p class="lead mb-0">
+            SmartChef collects only the data required to personalize your meals. Below is a quick look at how
+            information flows through the app and how you stay in control.
+        </p>
+    </div>
+</section>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="privacy-card animate-slide-up">
+            <h5>What we store</h5>
+            <p>
+                Email, display name, hashed password, and any meals or daily logs you explicitly save.
+                Ingredient inputs used to generate meals stay local to your browser session unless you save the result.
+            </p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="privacy-card animate-slide-up delay-1">
+            <h5>How we use it</h5>
+            <p>
+                Your calorie target powers the tracker, and saved meals populate history. ChefAI requests may send
+                anonymized ingredient lists to Gemini when enabled. We never sell or share your info with advertisers.
+            </p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="privacy-card animate-slide-up delay-2">
+            <h5>Your controls</h5>
+            <p>
+                Delete meals or logs any time, update your profile target, and toggle real AI usage per session.
+                Need a full export or removal? Reach us via <a href="mailto:privacy@smartchef.ai">privacy@smartchef.ai</a>.
+            </p>
+        </div>
+    </div>
+</div>
+
+<div class="glass-card animate-slide-up">
+    <div class="card-body">
+        <h4 class="card-title">Compliance snapshot</h4>
+        <ul class="list-unstyled mb-0">
+            <li>• Passwords hashed with ASP.NET Identity’s latest recommendations.</li>
+            <li>• TLS enforced across the app, including AI callbacks and API calls.</li>
+            <li>• Database access limited to your account context; no cross-user reads.</li>
+            <li>• Daily nutrition logs exist only for the days you apply meals.</li>
+        </ul>
+    </div>
+</div>

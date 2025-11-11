@@ -59,6 +59,11 @@ public class NutritionService : INutritionService
             TotalFatGrams = ingredientResults.Sum(i => i.FatGrams)
         };
 
+        if ((ingredientResults.Count == 0 || summary.TotalCalories <= 0) && request.CalorieTarget > 0)
+        {
+            ApplyTargetAsSummary(summary, ingredientResults, request.CalorieTarget);
+        }
+
         return (summary, ingredientResults);
     }
 
@@ -116,7 +121,7 @@ public class NutritionService : INutritionService
 
     private IngredientNutrition CreateFallbackNutrition(IngredientInputModel ingredient)
     {
-        var baseCalories = 90m + (ComputeStableHash(ingredient.Name) % 120);
+        var baseCalories = 120m + (ComputeStableHash(ingredient.Name) % 150);
         var calories = baseCalories * GetQuantityScalingFactor(ingredient.Quantity);
 
         // Simple macro split: 30% protein, 40% carbs, 30% fat.
@@ -145,6 +150,29 @@ public class NutritionService : INutritionService
             }
 
             return Math.Abs(hash);
+        }
+    }
+
+    private static void ApplyTargetAsSummary(
+        NutritionSummary summary,
+        List<IngredientNutrition> ingredientResults,
+        decimal targetCalories)
+    {
+        summary.TotalCalories = Math.Round(targetCalories, 2);
+        summary.TotalProteinGrams = Math.Round((targetCalories * 0.35m) / 4m, 2);
+        summary.TotalCarbohydrateGrams = Math.Round((targetCalories * 0.4m) / 4m, 2);
+        summary.TotalFatGrams = Math.Round((targetCalories * 0.25m) / 9m, 2);
+
+        if (!ingredientResults.Any())
+        {
+            ingredientResults.Add(new IngredientNutrition
+            {
+                Name = "Balanced macros (auto)",
+                Calories = summary.TotalCalories,
+                ProteinGrams = summary.TotalProteinGrams,
+                CarbohydrateGrams = summary.TotalCarbohydrateGrams,
+                FatGrams = summary.TotalFatGrams
+            });
         }
     }
 }

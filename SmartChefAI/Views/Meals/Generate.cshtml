@@ -2,17 +2,105 @@
 
 @{
     var mode = (string?)(ViewData["Mode"] ?? "dummy");
+    var isChefMode = string.Equals(mode, "chef", StringComparison.OrdinalIgnoreCase);
     var heroTitle = (string?)(ViewData["ModeTitle"] ?? "Generate a Smart Meal");
     var heroSubtitle = (string?)(ViewData["ModeSubtitle"] ?? "Tell the assistant what you have on hand and your calorie goal.");
     var actionName = (string?)(ViewData["ModePrimaryAction"] ?? "DummyAi");
     ViewData["Title"] = heroTitle;
+
+    var heroHighlights = isChefMode
+        ? new[]
+        {
+            "Real nutrition lookup + Gemini meal ideas",
+            "Auto-adjusts macros toward your calorie goal",
+            "Best for detailed ingredient lists"
+        }
+        : new[]
+        {
+            "Lightning-fast mock ideas for demos",
+            "Simulated macros for quick testing",
+            "Great when you only have one ingredient"
+        };
+
+    var helperTitle = isChefMode ? "ChefAI best practices" : "Dummy AI shortcuts";
+    var helperBullets = isChefMode
+        ? new[]
+        {
+            "List ingredients with quantity + unit for more accurate macros.",
+            "Toggle the calorie target checkbox if you want ChefAI to use your saved goal.",
+            "Expect a short pause while Gemini thinks—watch the tracker update after saving."
+        }
+        : new[]
+        {
+            "One ingredient is enough; we'll pair it with staples automatically.",
+            "Use it for ideation before switching to ChefAI for precise macros.",
+            "Save meals to build your library even from mock outputs."
+        };
 }
 
-<div class="hero-panel">
-    <h1 class="mb-3">@heroTitle</h1>
-    <p class="text-muted-soft mb-0">
-        @heroSubtitle
-    </p>
+<section class="mode-hero animate-panel @(isChefMode ? "chef" : "dummy")">
+    <div class="animate-fade">
+        <div class="mode-chip">
+            <span class="dot"></span>
+            @(isChefMode ? "ChefAI • Vertex Powered" : "Dummy AI • Simulated")
+        </div>
+        <h1 class="mb-3">@heroTitle</h1>
+        <p class="lead mb-4">
+            @heroSubtitle
+        </p>
+        <ul class="feature-list">
+            @foreach (var highlight in heroHighlights)
+            {
+                <li>@highlight</li>
+            }
+        </ul>
+        <div class="hero-actions">
+            <a asp-controller="Meals" asp-action="Saved" class="btn btn-outline-light">View saved meals</a>
+            <a asp-controller="Home" asp-action="Index" class="btn btn-link text-white text-decoration-underline">
+                Dashboard
+            </a>
+        </div>
+    </div>
+    <div class="hero-card animate-fade delay-1">
+        <p class="text-muted mb-1">Session tips</p>
+        <ul class="list-unstyled mb-0 small">
+            <li>• Ingredients update instantly—no need to reload.</li>
+            <li>• Removing an ingredient keeps nutrition balanced.</li>
+            <li>• Save &amp; apply to update the daily tracker.</li>
+        </ul>
+    </div>
+</section>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-6">
+        <div class="glass-card h-100 animate-slide-up">
+            <div class="card-body">
+                <h5 class="card-title">@helperTitle</h5>
+                <ul class="list-unstyled mb-0">
+                    @foreach (var tip in helperBullets)
+                    {
+                        <li>• @tip</li>
+                    }
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="glass-card h-100 animate-slide-up delay-1">
+            <div class="card-body">
+                <h5 class="card-title">Need ingredient ideas?</h5>
+                <p class="card-text">
+                    Think in trios: hero protein or veg, hearty filler (grains, legumes), and a brightness booster
+                    (citrus, herbs, yogurt). ChefAI fills gaps automatically, but solid anchors speed up generation.
+                </p>
+                <div class="d-flex flex-wrap gap-2">
+                    <span class="badge-nutrition">Protein + Grain</span>
+                    <span class="badge-nutrition">Veg + Healthy fat</span>
+                    <span class="badge-nutrition">Spice blend</span>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 @if (ViewData["ModeWarnings"] is IEnumerable<string> warnings && warnings.Any())
@@ -32,13 +120,13 @@
     @Html.AntiForgeryToken()
     <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
-    <fieldset class="border rounded-3 p-3 p-md-4 mb-4 bg-light">
+    <fieldset class="ingredient-fieldset animate-slide-up">
         <legend class="float-none w-auto px-2 fw-semibold">Ingredients</legend>
         <div class="row g-3">
             @for (var i = 0; i < Model.Ingredients.Count; i++)
             {
                 <div class="col-12">
-                    <div class="card ingredient-card">
+                    <div class="card ingredient-card animate-slide-up @(i % 2 == 0 ? string.Empty : "delay-1")">
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-center mb-2">
                                 <h6 class="mb-0">Ingredient @(i + 1)</h6>
@@ -101,7 +189,7 @@
 
     <input type="hidden" id="remove-index" name="removeIndex" value="-1" />
 
-    <div class="d-flex gap-2">
+    <div class="form-cta animate-slide-up">
         <button class="btn btn-primary" type="submit" name="submitAction" value="generate">
             Generate Meal
         </button>

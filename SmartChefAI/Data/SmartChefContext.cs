@@ -1,3 +1,4 @@
+using System;
 using Microsoft.EntityFrameworkCore;
 using SmartChefAI.Models;
 
@@ -15,6 +16,7 @@ public class SmartChefContext : DbContext
     public DbSet<MealIngredient> MealIngredients => Set<MealIngredient>();
     public DbSet<MealInstruction> MealInstructions => Set<MealInstruction>();
     public DbSet<AppLog> AppLogs => Set<AppLog>();
+    public DbSet<DailyNutritionLog> DailyNutritionLogs => Set<DailyNutritionLog>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -48,6 +50,11 @@ public class SmartChefContext : DbContext
             entity.HasMany(e => e.Meals)
                 .WithOne(m => m.User)
                 .HasForeignKey(m => m.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasMany(e => e.DailyNutritionLogs)
+                .WithOne(l => l.User)
+                .HasForeignKey(l => l.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
 
@@ -136,6 +143,32 @@ public class SmartChefContext : DbContext
 
             entity.Property(e => e.CreatedAtUtc)
                 .HasDefaultValueSql("GETUTCDATE()");
+        });
+
+        modelBuilder.Entity<DailyNutritionLog>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.Date)
+                .HasConversion(
+                    v => v.ToDateTime(TimeOnly.MinValue),
+                    v => DateOnly.FromDateTime(v))
+                .HasColumnType("date");
+
+            entity.Property(e => e.Calories)
+                .HasPrecision(12, 2);
+
+            entity.Property(e => e.ProteinGrams)
+                .HasPrecision(12, 2);
+
+            entity.Property(e => e.CarbohydrateGrams)
+                .HasPrecision(12, 2);
+
+            entity.Property(e => e.FatGrams)
+                .HasPrecision(12, 2);
+
+            entity.HasIndex(e => new { e.UserId, e.Date })
+                .IsUnique();
         });
     }
 }

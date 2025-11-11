@@ -22,6 +22,6 @@ public class AppLogService : IAppLogService
         };
 
         _dbContext.AppLogs.Add(log);
-        await _dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        await _dbContext.SaveChangesAsync(cancellationToken);
     }
 }

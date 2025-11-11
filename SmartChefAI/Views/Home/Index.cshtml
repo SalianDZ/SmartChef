@@ -1,8 +1,162 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+﻿@using System.Globalization
+@model HomeDashboardViewModel
+
+@{
+    ViewData["Title"] = "SmartChef Dashboard";
+    var progressValue = Model.CalorieProgressPercent.ToString("0.##", CultureInfo.InvariantCulture);
+    var progressRatio = Math.Clamp(Model.CalorieProgressPercent / 100.0, 0, 1);
+    var progressRatioValue = progressRatio.ToString("0.###", CultureInfo.InvariantCulture);
+    var calorieGoalLabel = Model.EffectiveCalorieGoal.ToString("0");
+    var consumedLabel = Model.CaloriesConsumedToday.ToString("0");
+    var remainingLabel = Model.RemainingCalories.ToString("0");
+    var lastMealTimestamp = Model.LatestMealCreatedAtUtc?.ToLocalTime().ToString("MMM d • h:mm tt");
+    var isOverGoal = Model.CalorieProgressPercent > 100;
+    var ringColor = isOverGoal ? "rgba(239, 83, 80, 0.95)" : "var(--sc-accent)";
+    var ringBaseColor = isOverGoal ? "rgba(239, 83, 80, 0.15)" : "rgba(46, 125, 50, 0.12)";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+@if (!Model.IsAuthenticated)
+{
+    <section class="dashboard-hero guest animate-panel">
+        <div class="animate-fade">
+            <p class="eyebrow-text">SmartChef AI</p>
+            <h1>Plan nourishing meals with confidence.</h1>
+            <p class="lead">
+                Track calories, experiment with ChefAI, and keep your day balanced with just a few clicks.
+            </p>
+            <div class="hero-actions">
+                <a asp-controller="Account" asp-action="Login" class="btn btn-primary">Log in</a>
+                <a asp-controller="Account" asp-action="Register" class="btn btn-outline-light">Create free account</a>
+            </div>
+        </div>
+        <div class="hero-card animate-fade delay-1">
+            <p class="text-muted mb-1">Why SmartChef?</p>
+            <ul class="list-unstyled mb-0">
+                <li>✔️ Daily calorie insights</li>
+                <li>✔️ Generative meal suggestions</li>
+                <li>✔️ Save and reuse your favorites</li>
+            </ul>
+        </div>
+    </section>
+}
+else
+{
+    <section class="dashboard-hero animate-panel">
+        <div class="animate-fade">
+            <p class="eyebrow-text">Good to see you, @Model.GreetingName.</p>
+            <h1>Let’s keep today on track.</h1>
+            <p class="lead mb-4">
+                You have @remainingLabel kcal remaining toward your
+                @(Model.IsUsingDefaultGoal ? "default" : "personal") goal of @calorieGoalLabel kcal.
+            </p>
+            <div class="hero-actions">
+                <a asp-controller="Meals" asp-action="ChefAi" class="btn btn-primary">Generate with ChefAI</a>
+                <a asp-controller="Meals" asp-action="DummyAi" class="btn btn-outline-light">Use Dummy AI</a>
+            </div>
+        </div>
+        <div class="hero-card animate-fade delay-1">
+            <p class="text-muted mb-1">Latest meal</p>
+            @if (!string.IsNullOrWhiteSpace(Model.LatestMealTitle))
+            {
+                <h4 class="mb-1">@Model.LatestMealTitle</h4>
+                <p class="text-muted small mb-0">
+                    saved @lastMealTimestamp
+                </p>
+            }
+            else
+            {
+                <p class="mb-0">No meals saved yet. Generate one to populate your tracker.</p>
+            }
+        </div>
+    </section>
+
+    <div class="row g-4 mb-4">
+        <div class="col-xl-5">
+            <div class="tracker-card h-100 animate-slide-up">
+                <div class="calorie-ring @(isOverGoal ? "over-goal" : "on-track")"
+                     style="--progress-ratio:@progressRatioValue; --ring-color:@ringColor; --ring-base:@ringBaseColor;">
+                    <div class="ring-inner">
+                        <span class="ring-label">Today</span>
+                        <span class="ring-value">@consumedLabel</span>
+                        <small>of @calorieGoalLabel kcal</small>
+                    </div>
+                </div>
+                <div class="tracker-meta">
+                    <div>
+                        <p class="text-muted mb-1">Remaining</p>
+                        <h3>@remainingLabel kcal</h3>
+                        @if (Model.IsUsingDefaultGoal)
+                        {
+                            <small class="text-muted">Default 2,000 kcal target</small>
+                        }
+                        else
+                        {
+                            <small class="text-muted">Based on your profile</small>
+                        }
+                    </div>
+                    <div>
+                        <p class="text-muted mb-1">Status</p>
+                        <span class="status-pill @(Model.CalorieProgressPercent <= 100 ? "status-pill-success" : "status-pill-warning")">
+                            @(Model.CalorieProgressPercent <= 100 ? "On pace" : "Above goal")
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-7">
+            <div class="stat-grid h-100">
+                <div class="stat-card animate-slide-up">
+                    <p class="text-muted mb-1">Protein</p>
+                    <h3>@Model.ProteinToday.ToString("0.#") g</h3>
+                </div>
+                <div class="stat-card animate-slide-up delay-1">
+                    <p class="text-muted mb-1">Carbs</p>
+                    <h3>@Model.CarbsToday.ToString("0.#") g</h3>
+                </div>
+                <div class="stat-card animate-slide-up delay-2">
+                    <p class="text-muted mb-1">Fats</p>
+                    <h3>@Model.FatToday.ToString("0.#") g</h3>
+                </div>
+                <div class="stat-card animate-slide-up delay-3">
+                    <p class="text-muted mb-1">Meals saved</p>
+                    <h3>@Model.SavedMealsCount</h3>
+                    <small class="text-muted">Include new meals to keep history fresh.</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-md-6">
+            <div class="glass-card h-100 animate-slide-up">
+                <div class="card-body">
+                    <h5 class="card-title">Need inspiration?</h5>
+                    <p class="card-text">
+                        ChefAI blends your available ingredients with your calorie target to craft practical,
+                        wholesome dishes. Prefer something simple? The Dummy AI offers instant mock recipes.
+                    </p>
+                    <div class="d-flex flex-wrap gap-2">
+                        <a asp-controller="Meals" asp-action="ChefAi" class="btn btn-primary">ChefAI Kitchen</a>
+                        <a asp-controller="Meals" asp-action="DummyAi" class="btn btn-outline-secondary">Dummy AI Lab</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="glass-card h-100 animate-slide-up delay-1">
+                <div class="card-body">
+                    <h5 class="card-title">Stay consistent</h5>
+                    <p class="card-text">
+                        Log meals to build your daily graph. Soon you’ll unlock deeper trends such as color-coded alerts
+                        when you overshoot your target and weekly summaries right here on the home screen.
+                    </p>
+                    <ul class="list-unstyled mb-0">
+                        <li>• Apply meals to today’s intake to update the tracker.</li>
+                        <li>• Save favorites to reuse them any time.</li>
+                        <li>• Watch for future insights like streaks and goal reminders.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+}
